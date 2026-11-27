@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
+<title>Tempo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f2f3f5;color:#172033;min-height:100dvh;display:grid;place-items:center;padding:24px}main{width:100%;max-width:380px}h1{font-size:46px;letter-spacing:-2px;margin:0}p{color:#687080}input,button{width:100%;padding:15px;font-size:16px;border-radius:12px;margin-top:12px}input{border:1px solid #d5d9e0;background:white}button{border:none;color:white;background:#4263eb;font-weight:600;cursor:pointer}button:disabled{opacity:.5}#estado{white-space:pre-wrap;line-height:1.6;font-size:14px;margin-top:20px}
+</style>
+</head>
+<body>
+<main><h1>Tempo.</h1><p>Tu tiempo, en un solo lugar.</p>
+<form id="formulario"><label for="clave">Clave de acceso</label><input id="clave" type="password" placeholder="Clave de acceso" autocomplete="off" required><button id="entrar" type="submit">Comprobar conexión</button></form>
+<div id="estado" role="status" aria-live="polite"></div></main>
+<script>
+"use strict";
+const API="https://script.google.com/macros/s/AKfycbySnnJn5uhX2WOdqGd2gpQd6N5kFFc6JQWa25gNwvlKs7q1MFKc4TWJjwscwtxH1PuU/exec";
+const estado=document.getElementById("estado"),boton=document.getElementById("entrar"),campo=document.getElementById("clave");
+function generarToken(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,"0")).join("");}
+async function consultar(datos){
+ const respuesta=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},credentials:"omit",cache:"no-store",redirect:"follow",body:JSON.stringify(datos)});
+ if(!respuesta.ok)throw new Error("Error HTTP "+respuesta.status);
+ const resultado=await respuesta.json();
+ if(!resultado.ok)throw new Error(resultado.error||"Error de API");
+ return resultado;
+}
+document.getElementById("formulario").addEventListener("submit",async e=>{
+ e.preventDefault();boton.disabled=true;estado.textContent="Comprobando conexión…";
+ let token,conectado=false;
+ try{
+ token=generarToken();
+ const clave=campo.value.trim();campo.value="";
+ await consultar({accion:"login",clave,token});conectado=true;
+ estado.textContent="✓ Clave correcta\n✓ Sesión iniciada\n";
+ await consultar({accion:"sesion",token});
+ const datos=await consultar({accion:"calendarios",token});
+ estado.textContent+="✓ "+datos.calendarios.length+" calendarios conectados\n";
+ datos.calendarios.forEach(cal=>{estado.textContent+="   · "+cal.nombre+"\n";});
+ const desde=new Date(),hasta=new Date();hasta.setDate(hasta.getDate()+7);
+ const inicio=performance.now();
+ const eventos=await consultar({accion:"eventos",token,desde:desde.toISOString(),hasta:hasta.toISOString()});
+ estado.textContent+="\n✓ "+eventos.eventos.length+" eventos recuperados\n✓ Tiempo de consulta: "+((performance.now()-inicio)/1000).toFixed(2)+" s\n\nConexión correcta.";
+ }catch(error){estado.textContent+="\nError: "+error.message;}
+ finally{
+ if(conectado){try{await consultar({accion:"logout",token});estado.textContent+="\n✓ Sesión de prueba cerrada";}catch{estado.textContent+="\nNo se pudo cerrar la sesión remota.";}}
+ boton.disabled=false;
+ }
+});
+</script>
+</body></html>
