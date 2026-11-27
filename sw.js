@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="tempo-shell-1.2.1";
+const CACHE="tempo-shell-1.3.0";
 const root=new URL(self.registration.scope);
 const shell=new URL("index.html",root).href;
 const assets=["index.html","manifest.webmanifest","icon.svg","tempo-apple-180.png","tempo-icon-192.png","tempo-icon-512.png"].map(p=>new URL(p,root).href);
