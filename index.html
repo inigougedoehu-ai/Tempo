@@ -206,6 +206,7 @@ html,body{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adju
 @media(prefers-reduced-motion:reduce){.skeleton div{animation:none}}
 @media(max-width:800px){#app.shell{padding-top:max(6px,env(safe-area-inset-top));padding-left:6px;padding-right:6px}#app .brand{font-size:25px}#app header{min-height:38px;margin-bottom:4px}#app .topAction{height:36px;width:36px;min-width:36px}#app .status{font-size:9px}.mainNav{margin:0 -6px}.mainNav button{min-height:48px;font-size:10px}#app .toolbar .nav button{padding:5px 6px}#app .viewPicker select{max-width:75px;font-size:12px}.reportView{padding:16px}}
 @media(min-width:801px){.mainNav{border-radius:14px 14px 0 0;margin-top:3px}.mainNav button{font-size:12px}}
+.availabilityTitle.unknown{border-color:#b1ab9f}
 </style></head>
 <body>
 <section id="login" class="login"><main><h1>Tempo<span style="color:var(--accent)">.</span></h1><p>Tu tiempo, en un solo lugar.</p><form id="loginForm"><label for="key">Clave de acceso</label><input class="input" id="key" type="password" required autocomplete="off" placeholder="Introduce tu clave"><label class="check"><input id="remember" type="checkbox" checked> Recordar sesión en este dispositivo</label><button class="primary" id="loginButton">Entrar</button></form><p id="loginStatus" role="status"></p></main></section>
@@ -270,7 +271,7 @@ function dataFor(r){return covers(mainData,r)?mainData:covers(extraData,r)?extra
 function cacheOwner(){return session?.token;}
 function overlaps(e,d){if(e.diaCompleto)return e.inicio<=d&&e.fin>d;return Date.parse(e.inicio)<Date.parse(midnight(add(d,1)))&&Date.parse(e.fin)>Date.parse(midnight(d));}
 function prune(data,r){if(!data)return null;const a=midnight(r.from),b=midnight(r.to);return {...data,from:data.from>r.from?data.from:r.from,to:data.to<r.to?data.to:r.to,eventos:data.eventos.filter(e=>e.diaCompleto?e.inicio<r.to&&e.fin>r.from:Date.parse(e.inicio)<Date.parse(b)&&Date.parse(e.fin)>Date.parse(a))};}
-async function resetLocal(){generation++;session=null;persistent=false;mainData=null;extraData=null;pending=false;remove(KEY);try{await clearCache();}catch{}$("calendar").replaceChildren();$("filters").replaceChildren();$("settingsFilters").replaceChildren();$("colorSettings").replaceChildren();clearSearch();detailCopy="";$("eventCalendar").replaceChildren();$("eventMap").removeAttribute("href");$("copyStatus").textContent="";$("calendarAliases").replaceChildren();$("availabilityContent").replaceChildren();for(const d of document.querySelectorAll("dialog"))if(d.open)d.close();$("eventTitle").textContent="";$("eventDescription").textContent="";$("eventLocation").textContent="";$("eventMeta").textContent="";$("app").hidden=true;$("login").hidden=false;}
+async function resetLocal(){generation++;session=null;persistent=false;mainData=null;extraData=null;pending=false;calendarScroll=null;remove(KEY);try{await clearCache();}catch{}$("calendar").replaceChildren();$("filters").replaceChildren();$("settingsFilters").replaceChildren();$("colorSettings").replaceChildren();clearSearch();detailCopy="";$("eventCalendar").replaceChildren();$("eventMap").removeAttribute("href");$("copyStatus").textContent="";$("calendarAliases").replaceChildren();$("availabilityContent").replaceChildren();for(const d of document.querySelectorAll("dialog"))if(d.open)d.close();$("eventTitle").textContent="";$("eventDescription").textContent="";$("eventLocation").textContent="";$("eventMeta").textContent="";$("app").hidden=true;$("login").hidden=false;}
 async function signOut(){const old=session;await resetLocal();$("loginStatus").textContent="Sesión cerrada.";if(old)try{await api({accion:"logout",token:old.token});}catch{$("loginStatus").textContent="Sesión local cerrada. No se pudo revocar el token remoto."}}
 async function fetchRange(r,t){const j=await api({accion:"eventos",token:t,desde:midnight(r.from),hasta:midnight(r.to)});return {...j,from:r.from,to:r.to};}
 async function sync(force=false){if(!session)return;if(session.expiracion<=Date.now()){await resetLocal();$("loginStatus").textContent="Sesión caducada. Introduce tu clave.";return;}if(syncBusy){pending=true;return;}if(!navigator.onLine){status("Sin conexión · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);render();return;}
@@ -556,11 +557,11 @@ function centerCurrentHour(sc){
  sc.scrollTop+=timed.getBoundingClientRect().top+(minutes(new Date())/60-pref.dayStart)*hourHeight-targetY;
  sc.scrollLeft=0;
 }
-setInterval(()=>{if(session&&!document.hidden){updateNowLine();updatePastEvents();updateAvailability();if(view==="summary"||view==="availability")render();}},15000);
+setInterval(()=>{if(session&&!document.hidden){updateNowLine();updatePastEvents();updateAvailability();if((view==="summary"||view==="availability")&&!document.querySelector("dialog[open]"))render();}},15000);
 let lastRenderSignature="";
 function render(){if(!session)return;if(pinchActive){renderAfterPinch=true;return;}const r=visibleRange(),data=dataFor(r),container=$("calendar"),old=container.querySelector(".scroll"),key=view+r.from+r.to,oldTop=old?.scrollTop,oldLeft=old?.scrollLeft;$("period").textContent=view==="month"?fmt(selected,{month:"long",year:"numeric"}):(view==="day"||view==="summary")?fmt(selected,{weekday:"short",day:"numeric",month:"long"}):fmt(r.from,{day:"numeric",month:"short"})+" – "+fmt(add(r.to,-1),{day:"numeric",month:"short",year:"numeric"});updateNavigation();$("app").classList.toggle("timedView",isTimedView());const events=data?visibleEvents(data):[];const signature=JSON.stringify([key,data?events:null,data?.calendarios||[],pref.hidden,pref.colorMode,pref.customColors,pref.aliases,pref.workweek,pref.dayStart,pref.dayEnd,pref.showEventTimes,pref.pastFade,pref.statsPeriod,(view==="summary"||view==="availability")?[Math.floor(Date.now()/15000),warn,data?.sincronizado]:null,hourHeight,data?null:navigator.onLine]);if(signature===lastRenderSignature&&container.firstChild&&!(focusNowOnRender&&isTimedView()&&containsToday(r))){updatePastEvents();updateNowLine();return;}lastRenderSignature=signature;const finishedOpen=!!container.querySelector(".finishedEvents[open]");const priorScroll=container.scrollTop;filters(data);container.replaceChildren();if(!data){const load=el("div","loading");if(navigator.onLine){const skeleton=el("div","skeleton");for(let i=0;i<3;i++)skeleton.append(el("div"));load.append(skeleton,el("p","","Consultando calendario…"));}else load.append(el("p","","Fechas no guardadas. Conéctate para consultarlas."));container.append(load);return;}if(view==="summary")renderSummary(r,events,container);else if(view==="availability"){const root=el("div","reportView availabilityPage");root.append(el("h2","","Disponibilidad"));renderAvailability(root,availabilityData());container.append(root);}else if(view==="stats")renderStats(r,events,container);else if(view==="month")renderMonth(r,events,container);else if(view==="agenda")renderAgenda(r,events,container);else{const s=renderWeek(r,events,container);if(containsToday(r)&&(focusNowOnRender||key!==lastRangeKey||!old)){centerCurrentHour(s);}else if(key===lastRangeKey&&old){s.scrollTop=oldTop;s.scrollLeft=0;}else{s.scrollTop=Math.max(0,7-pref.dayStart)*hourHeight;s.scrollLeft=0;}focusNowOnRender=false;}if(view==="summary"){const finished=container.querySelector(".finishedEvents");if(finished&&finishedOpen)finished.open=true;}if(!isTimedView()&&key===lastRangeKey)container.scrollTop=priorScroll;lastRangeKey=key;}
 function isTimedView(){return view==="day"||view==="three"||view==="week";}
-function navigate(){if(CALENDAR_VIEWS.includes(view))calendarDate=selected;else if(view==="stats")statsDate=selected;render();const d=dataFor(visibleRange());status(d?"Datos guardados · "+stamp(d):"Consultando fechas…",true);sync();}
+function navigate(){if(CALENDAR_VIEWS.includes(view))calendarDate=selected;else if(view==="stats")statsDate=selected;const d=dataFor(visibleRange());const fresh=!!d&&navigator.onLine&&Date.now()-Date.parse(d.sincronizado)<90000&&!warn;status(d?(fresh?"Actualizado · ":"Datos guardados · ")+stamp(d):"Consultando fechas…",!fresh);render();sync();}
 function movePeriod(direction){if(view==="summary"||view==="availability")return;const step=view==="day"||view==="summary"||view==="stats"&&pref.statsPeriod==="day"?1:view==="three"?3:view==="week"||view==="stats"&&pref.statsPeriod==="week"?7:30;selected=view==="month"||view==="stats"&&pref.statsPeriod==="month"?shiftMonth(selected,direction):add(selected,step*direction);navigate();}
 $("prev").onclick=()=>movePeriod(-1);$("next").onclick=()=>movePeriod(1);
 $("period").onclick=()=>{$("jumpDate").value=selected;$("dateDialog").showModal();};
@@ -742,11 +743,11 @@ function updateAvailability(){
  $("availabilityDot").className="availabilityDot "+(!a||a.stale?"unknown":a.occupied?"busy":"free");
  button.title=a&&!a.stale?(a.occupied?"Ocupado según calendario":"Sin eventos con hora ahora"):"Disponibilidad sin confirmar";
  button.setAttribute("aria-label",button.title+" · Ver disponibilidad de hoy");
- if($("availabilityDialog").open)renderAvailability($("availabilityContent"),a);
+ if($("availabilityDialog").open){$("availabilityContent").replaceChildren();renderAvailability($("availabilityContent"),a);}
 }
 function renderAvailability(root,a){
  if(!a){root.append(el("p","","No hay datos de hoy disponibles."));return;}
- root.append(el("div","availabilityTitle"+(a.occupied?" busy":""),a.stale?"Disponibilidad sin confirmar":a.occupied?"Ocupado según calendario":"Sin eventos con hora ahora"));
+ root.append(el("div","availabilityTitle"+(a.stale?" unknown":a.occupied?" busy":""),a.stale?"Disponibilidad sin confirmar":a.occupied?"Ocupado según calendario":"Sin eventos con hora ahora"));
  root.append(el("p","availabilityNote",(a.stale?"Datos guardados · ":"Última sincronización · ")+stamp(a.data)));
  if(a.occupied)root.append(el("p","","Eventos en curso hasta las "+(a.occupied.end===a.finish?"24:00":clock(a.occupied.end))+" · faltan "+durationText(a.occupied.end-a.now)));
  for(const x of a.active)root.append(el("p","availabilityEvent",x.e.titulo));
@@ -860,13 +861,16 @@ function updateNavigation(){
  $("app").dataset.tab=tab;
  for(const b of $("mainNav").querySelectorAll("button")){const on=b.dataset.tab===tab;b.classList.toggle("active",on);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");}
 }
+let calendarScroll=null;
 function switchTab(tab){
  if(!session)return;
+ const currentTab=CALENDAR_VIEWS.includes(view)?"calendar":view;if(tab===currentTab)return;
+ if(currentTab==="calendar"){const sc=$("calendar").querySelector(".scroll");calendarScroll=sc?{key:view+selected,top:sc.scrollTop}:null;}
  if(CALENDAR_VIEWS.includes(view)){calendarView=view;calendarDate=selected;}else if(view==="stats")statsDate=selected;
  if(tab==="calendar"){view=calendarView;selected=calendarDate;focusNowOnRender=true;}
  else if(tab==="stats"){view="stats";selected=statsDate;}
  else {view=tab;selected=civil();}
- savePref();navigate();$("calendar").scrollTop=0;
+ savePref();navigate();$("calendar").scrollTop=0;if(tab==="calendar"&&calendarScroll?.key===view+selected){const sc=$("calendar").querySelector(".scroll");if(sc)sc.scrollTop=calendarScroll.top;}
 }
 for(const b of $("mainNav").querySelectorAll("button"))b.onclick=()=>switchTab(b.dataset.tab);
 
