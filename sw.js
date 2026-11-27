@@ -1,8 +1,8 @@
 "use strict";
-const CACHE="tempo-shell-2.2.2";
+const CACHE="tempo-shell-2.2.3";
 const root=new URL(self.registration.scope);
 const shell=new URL("index.html",root).href;
-const assets=["index.html","tempo-2.2.2.js","manifest.webmanifest","icon.svg","tempo-apple-180.png","tempo-icon-192.png","tempo-icon-512.png"].map(p=>new URL(p,root).href);
+const assets=["index.html","tempo-2.2.3.js","manifest.webmanifest","icon.svg","tempo-apple-180.png","tempo-icon-192.png","tempo-icon-512.png"].map(p=>new URL(p,root).href);
 self.addEventListener("install",e=>e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(assets.map(u=>new Request(u,{cache:"reload"})));await self.skipWaiting();})()));
 self.addEventListener("activate",e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k.startsWith("tempo-shell-")&&k!==CACHE)await caches.delete(k);await self.clients.claim();})()));
 self.addEventListener("fetch",e=>{
