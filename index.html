@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><meta name="tempo-version" content="1.1.0"><meta name="theme-color" content="#f5f6fa"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'"><title>Tempo</title>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><meta name="tempo-version" content="1.2.0"><meta name="theme-color" content="#f5f6fa"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; worker-src 'self'; manifest-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><title>Tempo</title>
 <style>
 :root{color-scheme:light;--bg:#f4f5f9;--panel:#fff;--text:#202635;--muted:#6d7482;--line:#e4e6ed;--accent:#485bd8;--soft:#eef0ff;--hour:54px}
 :root[data-theme=dark]{color-scheme:dark;--bg:#111319;--panel:#1b1e27;--text:#eef0f7;--muted:#a3aabc;--line:#343846;--accent:#aab4ff;--soft:#2c3457}
@@ -144,16 +144,28 @@ html,body{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adju
  .monthWeek .spanEvent,.monthEvents .event{font-size:9px}
  .dateJump{font-size:clamp(11px,3.35vw,15px)}
 }
+
+.searchToggle{display:grid;place-items:center;min-height:32px;min-width:32px;color:var(--muted)}
+.searchDates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.searchDates label{min-width:0;font-size:12px}.searchDates input{min-width:0;font-size:16px}
+#searchSubmit{width:100%}#searchResults{max-height:45dvh;overflow:auto}.searchResult{padding:10px 2px}
+.availabilityButton{display:flex;align-items:center;gap:5px}.availabilityDot{width:10px;height:10px;border-radius:50%;background:#a3aabc;display:inline-block;flex-shrink:0}.availabilityDot.free{background:#5fd790}.availabilityDot.busy{background:#fe8b66}.availabilityDot.unknown{background:#b1ab9f}
+.availabilityTitle{font-weight:750;font-size:22px;color:var(--text);border-left:4px solid #5fd790;padding-left:9px}.availabilityTitle.busy{border-color:#fe8b66}
+.availabilityNote{font-size:12px;color:var(--muted)}.availabilityEvent{font-weight:650;overflow-wrap:anywhere}
+#availabilityContent h3{margin:18px 0 7px;font-size:14px}.availabilityTrack{height:20px;position:relative;background:#b0fbc1;border-radius:5px;overflow:hidden}.availabilityTrack span{position:absolute;height:100%;background:#fe8b66}.availabilityTrack i{position:absolute;height:100%;width:2px;background:#1d2730}
+.trackLabels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin:4px 0}.availabilityGap{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+@media(max-width:800px){.availabilityLabel{display:none}.headerActions .availabilityButton{padding:4px;min-width:27px;justify-content:center}.headerActions{gap:3px}.viewPicker span{display:none}.brand .build{display:block;font-size:8px;margin-top:2px}}
 </style></head>
 <body>
 <section id="login" class="login"><main><h1>Tempo<span style="color:var(--accent)">.</span></h1><p>Tu tiempo, en un solo lugar.</p><form id="loginForm"><label for="key">Clave de acceso</label><input class="input" id="key" type="password" required autocomplete="off" placeholder="Introduce tu clave"><label class="check"><input id="remember" type="checkbox" checked> Recordar sesión en este dispositivo</label><button class="primary" id="loginButton">Entrar</button></form><p id="loginStatus" role="status"></p></main></section>
-<div id="app" class="shell" hidden><header><div class="brand">Tempo<span>.</span> <small class="build">1.1.0</small></div><div class="headerActions"><label class="viewPicker"><span>Vista</span><select id="views" aria-label="Vista del calendario"><option value="day">Día</option><option value="three">3 días</option><option value="week">Semana</option><option value="month">Mes</option><option value="agenda">Agenda</option></select></label><button id="refresh" class="icon" aria-label="Actualizar" title="Actualizar">↻</button><button id="settings" class="icon" aria-label="Ajustes" title="Ajustes">⚙ <span class="settingsLabel">Ajustes</span></button></div></header>
+<div id="app" class="shell" hidden><header><div class="brand">Tempo<span>.</span> <small class="build">1.2.0</small></div><div class="headerActions"><button id="availability" class="icon availabilityButton" type="button" aria-label="Disponibilidad de hoy" title="Disponibilidad de hoy"><span id="availabilityDot" class="availabilityDot"></span><span class="availabilityLabel">Hoy</span></button><label class="viewPicker"><span>Vista</span><select id="views" aria-label="Vista del calendario"><option value="day">Día</option><option value="three">3 días</option><option value="week">Semana</option><option value="month">Mes</option><option value="agenda">Agenda</option></select></label><button id="refresh" class="icon" aria-label="Actualizar" title="Actualizar">↻</button><button id="settings" class="icon" aria-label="Ajustes" title="Ajustes">⚙ <span class="settingsLabel">Ajustes</span></button></div></header>
 <div id="updateBanner" class="updateBanner" hidden role="status"><div><strong>Nueva versión de Tempo</strong><small id="updateBannerText"></small></div><button id="installUpdate" class="primary" type="button">Actualizar</button><button id="dismissUpdate" class="dismissUpdate" type="button" aria-label="Más tarde">×</button></div>
-<div class="toolbar"><div class="nav"><button id="prev" aria-label="Anterior">‹</button><button id="today">Hoy</button><button id="next" aria-label="Siguiente">›</button></div><button id="period" class="period dateJump" type="button" aria-label="Ir a una fecha"></button><button id="searchToggle" class="searchToggle" type="button" aria-label="Buscar eventos" aria-expanded="false" aria-controls="search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button><input id="search" class="searchbox" type="search" placeholder="Buscar en la vista" aria-label="Buscar en la vista"></div>
+<div class="toolbar"><div class="nav"><button id="prev" aria-label="Anterior">‹</button><button id="today">Hoy</button><button id="next" aria-label="Siguiente">›</button></div><button id="period" class="period dateJump" type="button" aria-label="Ir a una fecha"></button><button id="searchToggle" class="searchToggle" type="button" aria-label="Buscar eventos" aria-haspopup="dialog" aria-controls="searchDialog"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button><input id="search" type="hidden" value=""></div>
 <div class="status" role="status"><span id="dot" class="dot warn"></span><span id="status">Conectando…</span></div><div id="filters" class="filters"></div><main id="calendar" class="surface"></main></div>
+<dialog id="availabilityDialog"><button class="close" aria-label="Cerrar">×</button><h2>Disponibilidad de hoy</h2><div id="availabilityContent"></div></dialog>
+<dialog id="searchDialog"><button class="close" aria-label="Cerrar">×</button><h2>Buscar eventos</h2><form id="globalSearchForm"><label for="globalQuery">Buscar en todos los calendarios autorizados</label><input id="globalQuery" type="search" class="input" placeholder="Título, lugar o descripción" required><div class="searchDates"><label>Desde<input id="searchFrom" type="date" class="input" required></label><label>Hasta<input id="searchTo" type="date" class="input" required></label></div><button id="searchSubmit" class="primary" type="submit">Buscar</button></form><p id="searchStatus" role="status"></p><div id="searchResults"></div></dialog>
 <dialog id="detail"><button class="close" aria-label="Cerrar">×</button><h2 id="eventTitle"></h2><p id="eventMeta"></p><p id="eventLocation" class="detailtext"></p><div id="eventDescription" class="detailtext"></div></dialog>
 <dialog id="dateDialog"><button class="close" aria-label="Cerrar">×</button><h2>Ir a una fecha</h2><label for="jumpDate">Selecciona una fecha</label><input id="jumpDate" type="date" class="input"><button id="jumpGo" class="primary" type="button">Ir a la fecha</button></dialog>
-<dialog id="prefs"><button class="close" aria-label="Cerrar">×</button><button id="prefsBack" class="icon prefsBack" type="button" hidden>‹ Atrás</button><h2 id="prefsTitle">Ajustes</h2><div id="prefsMenu"></div><div class="setting"><label for="theme">Apariencia</label><select id="theme"><option value="auto">Automática</option><option value="light">Clara</option><option value="dark">Oscura</option></select></div><div class="setting"><label for="colorMode">Colores de los eventos</label><select id="colorMode"><option value="google">Originales de Google</option><option value="calendar">Por calendario de Google</option><option value="ehu">Paleta EHU</option><option value="custom">Personalizados</option></select><p id="colorModeHint" class="colorHint"></p><div id="colorSettings"></div><button id="resetColors" class="icon" hidden>Restablecer colores EHU</button></div><div class="setting"><label for="hourScale">Altura de las horas</label><input id="hourScale" type="range" min="24" max="120" step="1" value="54" aria-label="Altura de las horas"><p id="hourScaleValue"></p><button id="resetScale" class="icon">Restablecer altura</button></div><div class="setting"><label>Calendarios visibles</label><div id="settingsFilters"></div></div><div class="setting"><label>Almacenamiento</label><p id="cacheInfo"></p><button id="clear" class="icon">Borrar caché</button></div><div class="setting"><label>Acerca de Tempo</label><p id="versionInfo">Versión 1.1.0</p><button id="checkUpdate" class="icon" type="button">Buscar actualizaciones</button><button id="installUpdateSettings" class="primary" type="button" hidden>Actualizar ahora</button></div><div class="setting"><label>Sesión</label><button id="logout" class="danger">Cerrar sesión</button></div></dialog>
+<dialog id="prefs"><button class="close" aria-label="Cerrar">×</button><button id="prefsBack" class="icon prefsBack" type="button" hidden>‹ Atrás</button><h2 id="prefsTitle">Ajustes</h2><div id="prefsMenu"></div><div class="setting"><label for="theme">Apariencia</label><select id="theme"><option value="auto">Automática</option><option value="light">Clara</option><option value="dark">Oscura</option></select></div><div class="setting"><label for="colorMode">Colores de los eventos</label><select id="colorMode"><option value="google">Originales de Google</option><option value="calendar">Por calendario de Google</option><option value="ehu">Paleta EHU</option><option value="custom">Personalizados</option></select><p id="colorModeHint" class="colorHint"></p><div id="colorSettings"></div><button id="resetColors" class="icon" hidden>Restablecer colores EHU</button></div><div class="setting"><label for="hourScale">Altura de las horas</label><input id="hourScale" type="range" min="24" max="120" step="1" value="54" aria-label="Altura de las horas"><p id="hourScaleValue"></p><button id="resetScale" class="icon">Restablecer altura</button></div><div class="setting"><label>Calendarios visibles</label><div id="settingsFilters"></div></div><div class="setting"><label>Almacenamiento</label><p id="cacheInfo"></p><button id="clear" class="icon">Borrar caché</button></div><div class="setting"><label>Acerca de Tempo</label><p id="versionInfo">Versión 1.2.0</p><button id="checkUpdate" class="icon" type="button">Buscar actualizaciones</button><button id="installUpdateSettings" class="primary" type="button" hidden>Actualizar ahora</button></div><div class="setting"><label>Sesión</label><button id="logout" class="danger">Cerrar sesión</button></div></dialog>
 <script>
 "use strict";
 const API="https://script.google.com/macros/s/AKfycbySnnJn5uhX2WOdqGd2gpQd6N5kFFc6JQWa25gNwvlKs7q1MFKc4TWJjwscwtxH1PuU/exec";
@@ -193,13 +205,13 @@ const writeCache=x=>cacheOp("readwrite",s=>s.put(x,"window"));
 const clearCache=()=>cacheOp("readwrite",s=>s.clear());
 function token(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,"0")).join("");}
 async function api(data){const ctl=new AbortController(),timeout=setTimeout(()=>ctl.abort(),25000);try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},credentials:"omit",cache:"no-store",redirect:"follow",signal:ctl.signal,body:JSON.stringify(data)});if(!r.ok)throw Error("HTTP "+r.status);const j=await r.json();if(!j.ok)throw Error(j.error||"ERROR_SERVIDOR");return j;}finally{clearTimeout(timeout);}}
-function status(s,w=false){statusText=s;warn=w;$("status").textContent=s;$("dot").classList.toggle("warn",w);if($("syncSettingsStatus"))$("syncSettingsStatus").textContent=s;}
+function status(s,w=false){statusText=s;warn=w;$("status").textContent=s;$("dot").classList.toggle("warn",w);if($("syncSettingsStatus"))$("syncSettingsStatus").textContent=s;updateAvailability();}
 function stamp(data){return data?.sincronizado?new Intl.DateTimeFormat("es-ES",{timeZone:TZ,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(data.sincronizado)):"";}
 function dataFor(r){return covers(mainData,r)?mainData:covers(extraData,r)?extraData:null;}
 function cacheOwner(){return session?.token;}
 function overlaps(e,d){if(e.diaCompleto)return e.inicio<=d&&e.fin>d;return Date.parse(e.inicio)<Date.parse(midnight(add(d,1)))&&Date.parse(e.fin)>Date.parse(midnight(d));}
 function prune(data,r){if(!data)return null;const a=midnight(r.from),b=midnight(r.to);return {...data,from:data.from>r.from?data.from:r.from,to:data.to<r.to?data.to:r.to,eventos:data.eventos.filter(e=>e.diaCompleto?e.inicio<r.to&&e.fin>r.from:Date.parse(e.inicio)<Date.parse(b)&&Date.parse(e.fin)>Date.parse(a))};}
-async function resetLocal(){generation++;session=null;persistent=false;mainData=null;extraData=null;pending=false;remove(KEY);try{await clearCache();}catch{}$("calendar").replaceChildren();$("filters").replaceChildren();$("settingsFilters").replaceChildren();$("colorSettings").replaceChildren();for(const d of document.querySelectorAll("dialog"))if(d.open)d.close();$("eventTitle").textContent="";$("eventDescription").textContent="";$("eventLocation").textContent="";$("eventMeta").textContent="";$("app").hidden=true;$("login").hidden=false;}
+async function resetLocal(){generation++;session=null;persistent=false;mainData=null;extraData=null;pending=false;remove(KEY);try{await clearCache();}catch{}$("calendar").replaceChildren();$("filters").replaceChildren();$("settingsFilters").replaceChildren();$("colorSettings").replaceChildren();clearSearch();$("availabilityContent").replaceChildren();for(const d of document.querySelectorAll("dialog"))if(d.open)d.close();$("eventTitle").textContent="";$("eventDescription").textContent="";$("eventLocation").textContent="";$("eventMeta").textContent="";$("app").hidden=true;$("login").hidden=false;}
 async function signOut(){const old=session;await resetLocal();$("loginStatus").textContent="Sesión cerrada.";if(old)try{await api({accion:"logout",token:old.token});}catch{$("loginStatus").textContent="Sesión local cerrada. No se pudo revocar el token remoto."}}
 async function fetchRange(r,t){const j=await api({accion:"eventos",token:t,desde:midnight(r.from),hasta:midnight(r.to)});return {...j,from:r.from,to:r.to};}
 async function sync(force=false){if(!session)return;if(session.expiracion<=Date.now()){await resetLocal();$("loginStatus").textContent="Sesión caducada. Introduce tu clave.";return;}if(syncBusy){pending=true;return;}if(!navigator.onLine){status("Sin conexión · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);render();return;}
@@ -207,7 +219,7 @@ syncBusy=true;const g=generation,t=session.token,r=windowRange(),v=visibleRange(
 try{
  if(!covers(mainData,r)||force||!mainData||Date.now()-Date.parse(mainData.sincronizado)>25000){
   const fresh=await fetchRange(r,t);if(g!==generation)return;
-  mainData=fresh;if(persistent)try{await writeCache({owner:cacheOwner(),data:fresh});}catch{}
+  mainData=fresh;updateAvailability();if(persistent)try{await writeCache({owner:cacheOwner(),data:fresh});}catch{}
   render();
  }
  if(g!==generation)return;
@@ -215,7 +227,7 @@ try{
  if(g!==generation)return;
  const d=dataFor(visibleRange());status(d?"Actualizado · "+stamp(d):"Consultando fechas…",!d);
 }catch(e){if(g!==generation)return;if(e.message==="NO_AUTORIZADO"){await resetLocal();$("loginStatus").textContent="La sesión ya no es válida. Introduce tu clave.";}else status("No se pudo actualizar · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);}
-finally{syncBusy=false;$("refresh").disabled=false;if(g===generation&&session)render();if(pending){pending=false;if(session)sync();}}
+finally{syncBusy=false;$("refresh").disabled=false;if(g===generation&&session){render();updateAvailability();}if(pending){pending=false;if(session)sync();}}
 }
 async function enter(s,remember,restore){focusNowOnRender=true;session=s;persistent=remember;generation++;const g=generation;mainData=null;extraData=null;$("login").hidden=true;$("app").hidden=false;status("Conectando…",true);render();if(remember&&restore){try{const c=await readCache();if(g!==generation)return;if(c?.owner===s.token&&c.data){mainData=prune(c.data,windowRange());status("Datos guardados · "+stamp(mainData),true);render();try{await writeCache({owner:s.token,data:mainData});}catch{}}}catch{}}
  if(g===generation)sync(true);
@@ -470,17 +482,18 @@ function centerCurrentHour(sc){
  sc.scrollTop+=timed.getBoundingClientRect().top+minutes(new Date())/60*hourHeight-targetY;
  sc.scrollLeft=0;
 }
-setInterval(()=>{if(session&&!document.hidden){updateNowLine();updatePastEvents();}},15000);
-function render(){if(!session)return;if(pinchActive){renderAfterPinch=true;return;}const r=visibleRange(),data=dataFor(r),container=$("calendar"),old=container.querySelector(".scroll"),key=view+r.from+r.to,oldTop=old?.scrollTop,oldLeft=old?.scrollLeft;$("period").textContent=view==="month"?fmt(selected,{month:"long",year:"numeric"}):view==="day"?fmt(selected,{weekday:"short",day:"numeric",month:"long"}):fmt(r.from,{day:"numeric",month:"short"})+" – "+fmt(add(r.to,-1),{day:"numeric",month:"short",year:"numeric"});$("views").value=view;$("app").classList.toggle("timedView",isTimedView());filters(data);container.replaceChildren();if(!data){container.append(el("div","loading",navigator.onLine?"Consultando calendario…":"Fechas no guardadas. Conéctate para consultarlas."));return;}const events=visibleEvents(data);if(view==="month")renderMonth(r,events,container);else if(view==="agenda")renderAgenda(r,events,container);else{const s=renderWeek(r,events,container);if(containsToday(r)&&(focusNowOnRender||key!==lastRangeKey||!old)){centerCurrentHour(s);}else if(key===lastRangeKey&&old){s.scrollTop=oldTop;s.scrollLeft=0;}else{s.scrollTop=7*hourHeight;s.scrollLeft=0;}focusNowOnRender=false;}lastRangeKey=key;}
+setInterval(()=>{if(session&&!document.hidden){updateNowLine();updatePastEvents();updateAvailability();}},15000);
+let lastRenderSignature="";
+function render(){if(!session)return;if(pinchActive){renderAfterPinch=true;return;}const r=visibleRange(),data=dataFor(r),container=$("calendar"),old=container.querySelector(".scroll"),key=view+r.from+r.to,oldTop=old?.scrollTop,oldLeft=old?.scrollLeft;$("period").textContent=view==="month"?fmt(selected,{month:"long",year:"numeric"}):view==="day"?fmt(selected,{weekday:"short",day:"numeric",month:"long"}):fmt(r.from,{day:"numeric",month:"short"})+" – "+fmt(add(r.to,-1),{day:"numeric",month:"short",year:"numeric"});$("views").value=view;$("app").classList.toggle("timedView",isTimedView());const events=data?visibleEvents(data):[];const signature=JSON.stringify([key,data?events:null,data?.calendarios||[],pref.hidden,pref.colorMode,pref.customColors,hourHeight,data?null:navigator.onLine]);if(signature===lastRenderSignature&&container.firstChild&&!(focusNowOnRender&&isTimedView()&&containsToday(r))){updatePastEvents();updateNowLine();return;}lastRenderSignature=signature;filters(data);container.replaceChildren();if(!data){container.append(el("div","loading",navigator.onLine?"Consultando calendario…":"Fechas no guardadas. Conéctate para consultarlas."));return;}if(view==="month")renderMonth(r,events,container);else if(view==="agenda")renderAgenda(r,events,container);else{const s=renderWeek(r,events,container);if(containsToday(r)&&(focusNowOnRender||key!==lastRangeKey||!old)){centerCurrentHour(s);}else if(key===lastRangeKey&&old){s.scrollTop=oldTop;s.scrollLeft=0;}else{s.scrollTop=7*hourHeight;s.scrollLeft=0;}focusNowOnRender=false;}lastRangeKey=key;}
 function isTimedView(){return view==="day"||view==="three"||view==="week";}
 function navigate(){render();const d=dataFor(visibleRange());status(d?"Datos guardados · "+stamp(d):"Consultando fechas…",true);sync();}
 function movePeriod(direction){const step=view==="day"?1:view==="three"?3:view==="week"?7:30;selected=view==="month"?shiftMonth(selected,direction):add(selected,step*direction);navigate();}
 $("prev").onclick=()=>movePeriod(-1);$("next").onclick=()=>movePeriod(1);
 $("period").onclick=()=>{$("jumpDate").value=selected;$("dateDialog").showModal();};
-$("jumpGo").onclick=()=>{const d=$("jumpDate").value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Number.isFinite(utc(d).getTime()))return;selected=d;focusNowOnRender=true;$("dateDialog").close();navigate();};$("today").onclick=()=>{selected=civil();focusNowOnRender=true;navigate();};$("views").onchange=e=>{if(["day","three","week","month","agenda"].includes(e.target.value)){view=e.target.value;savePref();navigate();}};$("search").oninput=render;$("searchToggle").onclick=()=>{const bar=$("search").closest(".toolbar"),open=bar.classList.toggle("searchOpen");$("searchToggle").setAttribute("aria-expanded",String(open));if(open)$("search").focus();else{$("search").value="";render();}};$("refresh").onclick=()=>{status("Actualizando…",true);sync(true);};$("settings").onclick=()=>{$("cacheInfo").textContent=mainData?("Ventana de 30 días anteriores y 90 posteriores · "+Math.round(new TextEncoder().encode(JSON.stringify(mainData)).length/1024)+" KB de datos"):"Sin caché disponible";updateScaleControl();renderColorSettings();renderUpdateStatus();showPrefsPage(null);$("prefs").showModal();};$("theme").onchange=e=>{pref.theme=e.target.value;savePref();theme();};$("clear").onclick=async()=>{mainData=null;extraData=null;try{await clearCache();}catch{}$("cacheInfo").textContent="Caché borrada. Se descargará nuevamente al actualizar.";render();};$("logout").onclick=signOut;for(const d of document.querySelectorAll("dialog"))d.querySelector(".close").onclick=()=>d.close();
+$("jumpGo").onclick=()=>{const d=$("jumpDate").value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Number.isFinite(utc(d).getTime()))return;selected=d;focusNowOnRender=true;$("dateDialog").close();navigate();};$("today").onclick=()=>{selected=civil();focusNowOnRender=true;navigate();};$("views").onchange=e=>{if(["day","three","week","month","agenda"].includes(e.target.value)){view=e.target.value;savePref();navigate();}};$("searchToggle").onclick=openGlobalSearch;$("refresh").onclick=()=>{status("Actualizando…",true);sync(true);};$("settings").onclick=()=>{$("cacheInfo").textContent=mainData?("Ventana de 30 días anteriores y 90 posteriores · "+Math.round(new TextEncoder().encode(JSON.stringify(mainData)).length/1024)+" KB de datos"):"Sin caché disponible";updateScaleControl();renderColorSettings();renderUpdateStatus();showPrefsPage(null);$("prefs").showModal();};$("theme").onchange=e=>{pref.theme=e.target.value;savePref();theme();};$("clear").onclick=async()=>{mainData=null;extraData=null;try{await clearCache();}catch{}$("cacheInfo").textContent="Caché borrada. Se descargará nuevamente al actualizar.";render();};$("logout").onclick=signOut;for(const d of document.querySelectorAll("dialog"))d.querySelector(".close").onclick=()=>d.close();
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session){updatePastEvents();if((isTimedView())&&containsToday(visibleRange())&&!pinchActive){const sc=$("calendar").querySelector(".scroll");if(sc&&sc.querySelector(".nowline")){updateNowLine(sc);centerCurrentHour(sc);}else focusNowOnRender=true;}sync(true);}});addEventListener("online",()=>sync(true));addEventListener("offline",()=>{if(session)status("Sin conexión · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);});setInterval(()=>{if(session&&!document.hidden)sync(true);},30000);
 
-const APP_VERSION="1.1.0";
+const APP_VERSION="1.2.0";
 let availableVersion=null, dismissedVersion=null, updateChecking=false, lastUpdateCheck=0, updateMessage="";
 function isNewerVersion(candidate,current){
  const a=candidate.split(".").map(Number),b=current.split(".").map(Number);
@@ -586,6 +599,93 @@ function bindSwipeNavigation(){
  target.addEventListener("click",e=>{if(Date.now()<suppress){e.preventDefault();e.stopImmediatePropagation();}},true);
 }
 setupPrefsMenu();bindSwipeNavigation();
+
+
+let searchRun=0;
+function clearSearch(){
+ searchRun++;$("globalQuery").value="";$("searchStatus").textContent="";$("searchResults").replaceChildren();$("searchSubmit").disabled=false;
+}
+function openGlobalSearch(){
+ clearSearch();const r=windowRange();$("searchFrom").value=r.from;$("searchTo").value=add(r.to,-1);$("searchDialog").showModal();
+}
+$("searchDialog").addEventListener("close",clearSearch);
+function normalized(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es");}
+$("globalSearchForm").addEventListener("submit",async e=>{
+ e.preventDefault();if(!session)return;
+ const q=normalized($("globalQuery").value.trim()),from=$("searchFrom").value,last=$("searchTo").value;
+ if(!q||!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(last)||last<from){$("searchStatus").textContent="Introduce un texto y fechas válidas.";return;}
+ const to=add(last,1),range={from,to},days=(utc(to)-utc(from))/86400000;
+ if(days>366){$("searchStatus").textContent="Selecciona hasta 366 días por búsqueda. Puedes consultar cualquier año.";return;}
+ const run=++searchRun,g=generation,t=session.token;const valid=()=>run===searchRun&&g===generation&&!!session&&$("searchDialog").open;
+ $("searchSubmit").disabled=true;$("searchResults").replaceChildren();$("searchStatus").textContent="Buscando…";
+ const matches=new Map(),names=new Map();let incomplete=false, cached=false;
+ try{
+  for(let f=from;f<to;){
+   const next=add(f,120),chunk={from:f,to:next<to?next:to};let d=dataFor(chunk);
+   if(d)cached=true;
+   if(!d&&navigator.onLine){d=await fetchRange(chunk,t);if(!valid())return;}
+   if(!d){incomplete=true;d=mainData;}
+   const a=Date.parse(midnight(chunk.from)),b=Date.parse(midnight(chunk.to));
+   for(const c of d?.calendarios||[])names.set(c.id,c.nombre);
+   for(const raw of d?.eventos||[]){
+    const ev=displayEvent(raw);
+    const inside=ev.diaCompleto?ev.inicio<chunk.to&&ev.fin>chunk.from:Date.parse(ev.inicio)<b&&Date.parse(ev.fin)>a;
+    if(inside&&[ev.titulo,ev.descripcion,ev.ubicacion].some(v=>normalized(v).includes(q)))matches.set(ev.id,ev);
+   }
+   f=chunk.to;
+  }
+  if(!valid())return;
+  const items=[...matches.values()].sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  $("searchStatus").textContent=items.length+" resultado"+(items.length===1?"":"s")+(incomplete?" · Búsqueda parcial sin conexión":cached?" · Incluye datos de la última sincronización":"")+(items.length>300?" · Se muestran los primeros 300":"");
+  for(const ev of items.slice(0,300)){
+   const b=el("button","agendaitem searchResult"),dot=el("span","swatch"),info=el("div");dot.style.background=eventColor(ev);
+   info.append(el("strong","",ev.titulo),el("small","",fmt(ev.diaCompleto?ev.inicio:civil(new Date(ev.inicio)),{dateStyle:"medium"})+" · "+(ev.diaCompleto?"Todo el día":clock(ev.inicio))+" · "+(names.get(ev.calendarioId)||"")));
+   b.append(dot,info);b.onclick=()=>{$("searchDialog").close();selected=ev.diaCompleto?ev.inicio:civil(new Date(ev.inicio));view="day";savePref();navigate();showEvent(ev);};$("searchResults").append(b);
+  }
+ }catch(err){
+  if(!valid())return;
+  if(err.message==="NO_AUTORIZADO"){await resetLocal();$("loginStatus").textContent="La sesión ya no es válida.";return;}
+  $("searchStatus").textContent="No se pudo completar la búsqueda. Inténtalo otra vez.";
+ }finally{if(valid())$("searchSubmit").disabled=false;}
+});
+function availabilityData(){
+ const day=civil(),range={from:day,to:add(day,1)},data=dataFor(range);
+ if(!data)return null;
+ const begin=Date.parse(midnight(day)),finish=Date.parse(midnight(range.to)),now=Date.now();
+ const events=(data.eventos||[]).map(displayEvent).filter(e=>!e.diaCompleto&&overlaps(e,day));
+ const intervals=events.map(e=>({start:Math.max(begin,Date.parse(e.inicio)),end:Math.min(finish,Date.parse(e.fin)),e})).filter(x=>x.end>x.start).sort((a,b)=>a.start-b.start);
+ const merged=[];
+ for(const x of intervals){const last=merged[merged.length-1];if(last&&x.start<=last.end)last.end=Math.max(last.end,x.end);else merged.push({start:x.start,end:x.end});}
+ const occupied=merged.find(x=>x.start<=now&&now<x.end),next=intervals.find(x=>x.start>now),active=intervals.filter(x=>x.start<=now&&now<x.end);
+ const free=[];let cursor=begin;for(const x of merged){if(x.start>cursor)free.push({start:cursor,end:x.start});cursor=Math.max(cursor,x.end);}if(cursor<finish)free.push({start:cursor,end:finish});
+ return {data,day,begin,finish,now,intervals,merged,occupied,next,active,free,stale:!navigator.onLine||warn||Date.now()-Date.parse(data.sincronizado)>90000};
+}
+function durationText(ms){const m=Math.max(0,Math.ceil(ms/60000)),h=Math.floor(m/60),r=m%60;return (h?h+" h ":"")+(r||!h?r+" min":"");}
+function intervalText(x,finish){return clock(x.start)+" – "+(x.end===finish?"24:00":clock(x.end));}
+function updateAvailability(){
+ const button=$("availability");if(!button)return;
+ const a=session?availabilityData():null;
+ $("availabilityDot").className="availabilityDot "+(!a||a.stale?"unknown":a.occupied?"busy":"free");
+ button.title=a&&!a.stale?(a.occupied?"Ocupado según calendario":"Sin eventos con hora ahora"):"Disponibilidad sin confirmar";
+ button.setAttribute("aria-label",button.title+" · Ver disponibilidad de hoy");
+ if(!$("availabilityDialog").open)return;
+ const root=$("availabilityContent");root.replaceChildren();
+ if(!a){root.append(el("p","","No hay datos de hoy disponibles."));return;}
+ root.append(el("div","availabilityTitle"+(a.occupied?" busy":""),a.occupied?"Ocupado según calendario":"Sin eventos con hora ahora"));
+ root.append(el("p","availabilityNote",(a.stale?"Datos guardados · ":"Última sincronización · ")+stamp(a.data)));
+ if(a.occupied)root.append(el("p","","Eventos en curso hasta las "+(a.occupied.end===a.finish?"24:00":clock(a.occupied.end))+" · faltan "+durationText(a.occupied.end-a.now)));
+ for(const x of a.active)root.append(el("p","availabilityEvent",x.e.titulo));
+ if(a.next){root.append(el("h3","","Próximo evento"),el("div","availabilityEvent",a.next.e.titulo),el("p","",intervalText(a.next,a.finish)+" · en "+durationText(a.next.start-a.now)));}
+ else root.append(el("p","","No quedan eventos con hora por comenzar hoy."));
+ const bar=el("div","availabilityTrack");for(const x of a.merged){const span=el("span");span.style.left=(x.start-a.begin)/(a.finish-a.begin)*100+"%";span.style.width=(x.end-x.start)/(a.finish-a.begin)*100+"%";bar.append(span);}const now=el("i");now.style.left=(a.now-a.begin)/(a.finish-a.begin)*100+"%";bar.append(now);
+ root.append(el("h3","","Ocupación del día"),bar);const legend=el("div","trackLabels");legend.append(el("span","","00:00"),el("span","","12:00"),el("span","","24:00"));root.append(legend,el("h3","","Huecos sin eventos restantes"));
+ const gaps=a.free.filter(x=>x.end>a.now);
+ if(!gaps.length)root.append(el("p","","No hay huecos restantes."));
+ for(const x of gaps){const start=Math.max(x.start,a.now);root.append(el("div","availabilityGap",intervalText({start,end:x.end},a.finish)+" · "+durationText(x.end-start)));}
+ root.append(el("p","availabilityNote","Solo refleja eventos con hora de los calendarios autorizados, incluso si están ocultos en la vista. No confirma la disponibilidad real. Los eventos de día completo no se cuentan."));
+}
+$("availability").onclick=()=>{$("availabilityDialog").showModal();updateAvailability();};
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js",{scope:"./",updateViaCache:"none"}).catch(()=>{});}
 
 const remembered=load(KEY,null);if(remembered&&/^[a-f0-9]{64}$/.test(remembered.token||"")&&remembered.expiracion>Date.now())enter(remembered,true,true);else{remove(KEY);clearCache().catch(()=>{});}
 </script></body></html>
