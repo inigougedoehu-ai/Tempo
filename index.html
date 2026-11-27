@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><meta name="tempo-version" content="1.0.10"><meta name="theme-color" content="#f5f6fa"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'"><title>Tempo</title>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><meta name="tempo-version" content="1.1.0"><meta name="theme-color" content="#f5f6fa"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'"><title>Tempo</title>
 <style>
 :root{color-scheme:light;--bg:#f4f5f9;--panel:#fff;--text:#202635;--muted:#6d7482;--line:#e4e6ed;--accent:#485bd8;--soft:#eef0ff;--hour:54px}
 :root[data-theme=dark]{color-scheme:dark;--bg:#111319;--panel:#1b1e27;--text:#eef0f7;--muted:#a3aabc;--line:#343846;--accent:#aab4ff;--soft:#2c3457}
@@ -103,15 +103,57 @@ html,body{width:100%;max-width:100%;-webkit-text-size-adjust:100%;text-size-adju
 .event.pastEvent{font-weight:500;box-shadow:none}
 .event.pastEvent small{opacity:.82}
 .agendaitem.pastEvent strong{color:var(--muted);font-weight:500}
+
+.dateJump{border:0;background:transparent;text-align:center;padding:5px 3px;cursor:pointer}
+.dateJump::after{content:"⌄";font-size:.8em;margin-left:4px;color:var(--muted)}
+#jumpGo{width:100%;margin-top:8px}#jumpDate{color-scheme:inherit}
+#calendar{touch-action:pan-y}
+.eventName{display:block;max-width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;word-break:normal}
+.timed .eventName{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;white-space:normal;overflow-wrap:normal;word-break:normal}
+.timed .overlapEvent .eventName{white-space:nowrap;display:block;text-overflow:ellipsis}
+.timed .overlapEvent small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.allSpan{isolation:isolate;gap:0;align-items:stretch}
+.allSpan .allDayBackground{padding:0;z-index:0}
+.allSpan .label{z-index:1}
+.allSpan .spanEvent{z-index:2;align-self:center;min-width:0;width:calc(100% - 4px);margin:1px 2px;padding:3px 4px;line-height:1.15;height:18px;white-space:nowrap}
+.spanEvent .eventName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spanEvent.continuesLeft{border-top-left-radius:0;border-bottom-left-radius:0}
+.spanEvent.continuesRight{border-top-right-radius:0;border-bottom-right-radius:0}
+.monthWeek{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-height:98px;border-top:1px solid var(--line);position:relative;isolation:isolate}
+.monthBg{border-right:1px solid var(--line);z-index:0;min-width:0}
+.monthBg:nth-child(4n){border-right:1px solid var(--line)}
+.monthNum{grid-row:1;z-index:1;justify-self:start;margin:2px 3px;border-radius:50%;width:23px;height:23px;font-weight:650;font-size:12px;padding:0}
+.monthNum.today{background:#485bd8;color:white}
+.monthNum.dim,.monthEvents.dim{opacity:.55}
+.monthWeek .spanEvent{z-index:2;min-width:0;width:calc(100% - 4px);margin:1px 2px;padding:2px 3px;font-size:10px;height:16px;align-self:center}
+.monthEvents{z-index:1;min-width:0;padding:2px;overflow:hidden}
+.monthEvents .event{margin-bottom:2px;padding:3px;font-size:10px}
+.monthEvents .eventName{white-space:nowrap}
+.prefsBack{margin:0 6px 12px 0;font-size:13px;padding:7px 10px}
+.prefsLink{display:flex;width:100%;align-items:center;text-align:left;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.prefsSymbol{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--soft);color:var(--accent);font-size:20px;flex-shrink:0}
+.prefsCopy{flex:1;min-width:0}.prefsCopy strong,.prefsCopy small{display:block}.prefsCopy small{font-size:12px;color:var(--muted);margin-top:3px}
+.prefsArrow{font-size:25px;color:var(--muted)}
+.prefsPage .setting:first-child{padding-top:2px}
+@media(max-width:800px){
+ .week.three{--time-col:34px}
+ .week.three .event{font-size:11px;padding:4px}
+ .week.three .event small{font-size:9px}
+ .week:not(.one) .allSpan .spanEvent{font-size:10px;padding:2px 3px}
+ .monthWeek{min-height:81px}
+ .monthWeek .spanEvent,.monthEvents .event{font-size:9px}
+ .dateJump{font-size:clamp(11px,3.35vw,15px)}
+}
 </style></head>
 <body>
 <section id="login" class="login"><main><h1>Tempo<span style="color:var(--accent)">.</span></h1><p>Tu tiempo, en un solo lugar.</p><form id="loginForm"><label for="key">Clave de acceso</label><input class="input" id="key" type="password" required autocomplete="off" placeholder="Introduce tu clave"><label class="check"><input id="remember" type="checkbox" checked> Recordar sesión en este dispositivo</label><button class="primary" id="loginButton">Entrar</button></form><p id="loginStatus" role="status"></p></main></section>
-<div id="app" class="shell" hidden><header><div class="brand">Tempo<span>.</span> <small class="build">1.0.10</small></div><div class="headerActions"><label class="viewPicker"><span>Vista</span><select id="views" aria-label="Vista del calendario"><option value="day">Día</option><option value="week">Semana</option><option value="month">Mes</option><option value="agenda">Agenda</option></select></label><button id="refresh" class="icon" aria-label="Actualizar" title="Actualizar">↻</button><button id="settings" class="icon" aria-label="Ajustes" title="Ajustes">⚙ <span class="settingsLabel">Ajustes</span></button></div></header>
+<div id="app" class="shell" hidden><header><div class="brand">Tempo<span>.</span> <small class="build">1.1.0</small></div><div class="headerActions"><label class="viewPicker"><span>Vista</span><select id="views" aria-label="Vista del calendario"><option value="day">Día</option><option value="three">3 días</option><option value="week">Semana</option><option value="month">Mes</option><option value="agenda">Agenda</option></select></label><button id="refresh" class="icon" aria-label="Actualizar" title="Actualizar">↻</button><button id="settings" class="icon" aria-label="Ajustes" title="Ajustes">⚙ <span class="settingsLabel">Ajustes</span></button></div></header>
 <div id="updateBanner" class="updateBanner" hidden role="status"><div><strong>Nueva versión de Tempo</strong><small id="updateBannerText"></small></div><button id="installUpdate" class="primary" type="button">Actualizar</button><button id="dismissUpdate" class="dismissUpdate" type="button" aria-label="Más tarde">×</button></div>
-<div class="toolbar"><div class="nav"><button id="prev" aria-label="Anterior">‹</button><button id="today">Hoy</button><button id="next" aria-label="Siguiente">›</button></div><div id="period" class="period"></div><button id="searchToggle" class="searchToggle" type="button" aria-label="Buscar eventos" aria-expanded="false" aria-controls="search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button><input id="search" class="searchbox" type="search" placeholder="Buscar en la vista" aria-label="Buscar en la vista"></div>
+<div class="toolbar"><div class="nav"><button id="prev" aria-label="Anterior">‹</button><button id="today">Hoy</button><button id="next" aria-label="Siguiente">›</button></div><button id="period" class="period dateJump" type="button" aria-label="Ir a una fecha"></button><button id="searchToggle" class="searchToggle" type="button" aria-label="Buscar eventos" aria-expanded="false" aria-controls="search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button><input id="search" class="searchbox" type="search" placeholder="Buscar en la vista" aria-label="Buscar en la vista"></div>
 <div class="status" role="status"><span id="dot" class="dot warn"></span><span id="status">Conectando…</span></div><div id="filters" class="filters"></div><main id="calendar" class="surface"></main></div>
 <dialog id="detail"><button class="close" aria-label="Cerrar">×</button><h2 id="eventTitle"></h2><p id="eventMeta"></p><p id="eventLocation" class="detailtext"></p><div id="eventDescription" class="detailtext"></div></dialog>
-<dialog id="prefs"><button class="close" aria-label="Cerrar">×</button><h2>Ajustes</h2><div class="setting"><label for="theme">Apariencia</label><select id="theme"><option value="auto">Automática</option><option value="light">Clara</option><option value="dark">Oscura</option></select></div><div class="setting"><label for="colorMode">Colores de los eventos</label><select id="colorMode"><option value="google">Originales de Google</option><option value="calendar">Por calendario de Google</option><option value="ehu">Paleta EHU</option><option value="custom">Personalizados</option></select><p id="colorModeHint" class="colorHint"></p><div id="colorSettings"></div><button id="resetColors" class="icon" hidden>Restablecer colores EHU</button></div><div class="setting"><label for="hourScale">Altura de las horas</label><input id="hourScale" type="range" min="24" max="120" step="1" value="54" aria-label="Altura de las horas"><p id="hourScaleValue"></p><button id="resetScale" class="icon">Restablecer altura</button></div><div class="setting"><label>Calendarios visibles</label><div id="settingsFilters"></div></div><div class="setting"><label>Almacenamiento</label><p id="cacheInfo"></p><button id="clear" class="icon">Borrar caché</button></div><div class="setting"><label>Acerca de Tempo</label><p id="versionInfo">Versión 1.0.10</p><button id="checkUpdate" class="icon" type="button">Buscar actualizaciones</button><button id="installUpdateSettings" class="primary" type="button" hidden>Actualizar ahora</button></div><div class="setting"><label>Sesión</label><button id="logout" class="danger">Cerrar sesión</button></div></dialog>
+<dialog id="dateDialog"><button class="close" aria-label="Cerrar">×</button><h2>Ir a una fecha</h2><label for="jumpDate">Selecciona una fecha</label><input id="jumpDate" type="date" class="input"><button id="jumpGo" class="primary" type="button">Ir a la fecha</button></dialog>
+<dialog id="prefs"><button class="close" aria-label="Cerrar">×</button><button id="prefsBack" class="icon prefsBack" type="button" hidden>‹ Atrás</button><h2 id="prefsTitle">Ajustes</h2><div id="prefsMenu"></div><div class="setting"><label for="theme">Apariencia</label><select id="theme"><option value="auto">Automática</option><option value="light">Clara</option><option value="dark">Oscura</option></select></div><div class="setting"><label for="colorMode">Colores de los eventos</label><select id="colorMode"><option value="google">Originales de Google</option><option value="calendar">Por calendario de Google</option><option value="ehu">Paleta EHU</option><option value="custom">Personalizados</option></select><p id="colorModeHint" class="colorHint"></p><div id="colorSettings"></div><button id="resetColors" class="icon" hidden>Restablecer colores EHU</button></div><div class="setting"><label for="hourScale">Altura de las horas</label><input id="hourScale" type="range" min="24" max="120" step="1" value="54" aria-label="Altura de las horas"><p id="hourScaleValue"></p><button id="resetScale" class="icon">Restablecer altura</button></div><div class="setting"><label>Calendarios visibles</label><div id="settingsFilters"></div></div><div class="setting"><label>Almacenamiento</label><p id="cacheInfo"></p><button id="clear" class="icon">Borrar caché</button></div><div class="setting"><label>Acerca de Tempo</label><p id="versionInfo">Versión 1.1.0</p><button id="checkUpdate" class="icon" type="button">Buscar actualizaciones</button><button id="installUpdateSettings" class="primary" type="button" hidden>Actualizar ahora</button></div><div class="setting"><label>Sesión</label><button id="logout" class="danger">Cerrar sesión</button></div></dialog>
 <script>
 "use strict";
 const API="https://script.google.com/macros/s/AKfycbySnnJn5uhX2WOdqGd2gpQd6N5kFFc6JQWa25gNwvlKs7q1MFKc4TWJjwscwtxH1PuU/exec";
@@ -123,7 +165,7 @@ function store(key,val){try{localStorage.setItem(key,JSON.stringify(val));return
 function remove(key){try{localStorage.removeItem(key);}catch{}}
 let pref=load(PREF,{theme:"auto",view:"week",hidden:[]});if(!Array.isArray(pref.hidden))pref.hidden=[];if(!["google","calendar","ehu","custom"].includes(pref.colorMode))pref.colorMode="ehu";if(!pref.customColors||typeof pref.customColors!=="object"||Array.isArray(pref.customColors))pref.customColors={};
 let session=null, persistent=false, mainData=null, extraData=null, syncBusy=false, generation=0, pending=false, timer=null, statusText="", warn=true, dbPromise=null;
-let view=["day","week","month","agenda"].includes(pref.view)?pref.view:"week";
+let view=["day","three","week","month","agenda"].includes(pref.view)?pref.view:"week";
 let hourHeight=Math.max(24,Math.min(120,Number(pref.hourHeight)||54)),pinchActive=false,renderAfterPinch=false;
 document.documentElement.style.setProperty("--hour",hourHeight+"px");
 const partsFmt=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
@@ -139,7 +181,7 @@ function fmt(d,opts){return new Intl.DateTimeFormat("es-ES",{timeZone:"UTC",...o
 function clock(t){return new Intl.DateTimeFormat("es-ES",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(t));}
 let selected=civil();
 function windowRange(){const t=civil();return {from:add(t,-30),to:add(t,91)};}
-function visibleRange(){if(view==="day")return {from:selected,to:add(selected,1)};if(view==="week"){const f=weekStart(selected);return {from:f,to:add(f,7)};}if(view==="month"){const f=weekStart(monthStart(selected));return {from:f,to:add(f,42)};}return {from:selected,to:add(selected,30)};}
+function visibleRange(){if(view==="day")return {from:selected,to:add(selected,1)};if(view==="three")return {from:selected,to:add(selected,3)};if(view==="week"){const f=weekStart(selected);return {from:f,to:add(f,7)};}if(view==="month"){const f=weekStart(monthStart(selected));return {from:f,to:add(f,42)};}return {from:selected,to:add(selected,30)};}
 function covers(data,r){return !!data&&data.from<=r.from&&data.to>=r.to;}
 function savePref(){pref.view=view;store(PREF,pref);}
 function theme(){document.documentElement.dataset.theme=pref.theme==="dark"||(pref.theme==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";$("theme").value=pref.theme;}
@@ -151,7 +193,7 @@ const writeCache=x=>cacheOp("readwrite",s=>s.put(x,"window"));
 const clearCache=()=>cacheOp("readwrite",s=>s.clear());
 function token(){return Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,"0")).join("");}
 async function api(data){const ctl=new AbortController(),timeout=setTimeout(()=>ctl.abort(),25000);try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},credentials:"omit",cache:"no-store",redirect:"follow",signal:ctl.signal,body:JSON.stringify(data)});if(!r.ok)throw Error("HTTP "+r.status);const j=await r.json();if(!j.ok)throw Error(j.error||"ERROR_SERVIDOR");return j;}finally{clearTimeout(timeout);}}
-function status(s,w=false){statusText=s;warn=w;$("status").textContent=s;$("dot").classList.toggle("warn",w);}
+function status(s,w=false){statusText=s;warn=w;$("status").textContent=s;$("dot").classList.toggle("warn",w);if($("syncSettingsStatus"))$("syncSettingsStatus").textContent=s;}
 function stamp(data){return data?.sincronizado?new Intl.DateTimeFormat("es-ES",{timeZone:TZ,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(data.sincronizado)):"";}
 function dataFor(r){return covers(mainData,r)?mainData:covers(extraData,r)?extraData:null;}
 function cacheOwner(){return session?.token;}
@@ -304,12 +346,55 @@ $("colorMode").onchange=e=>{pref.colorMode=e.target.value;savePref();renderColor
 $("resetColors").onclick=()=>{pref.customColors={};savePref();renderColorSettings();render();};
 
 function showEvent(e){$("eventTitle").textContent=e.titulo;$("eventMeta").textContent=(e.diaCompleto?fmt(e.inicio,{dateStyle:"full"})+" · Todo el día":fmt(civil(new Date(e.inicio)),{dateStyle:"full"})+" · "+clock(e.inicio)+" – "+clock(e.fin))+" · "+((dataFor(visibleRange())?.calendarios||mainData?.calendarios||[]).find(c=>c.id===e.calendarioId)?.nombre||"");$("eventLocation").textContent=e.ubicacion||"";$("eventDescription").textContent=e.descripcion||"";$("detail").showModal();}
-function eventButton(e,withTime=false){const n=el("button","event",e.titulo);bindEventAppearance(n,e);if(withTime&&!e.diaCompleto)n.append(el("small","",clock(e.inicio)+" – "+clock(e.fin)));n.addEventListener("click",()=>showEvent(e));n.title=e.titulo;return n;}
+function eventButton(e,withTime=false){const n=el("button","event");n.append(el("span","eventName",e.titulo));bindEventAppearance(n,e);if(withTime&&!e.diaCompleto)n.append(el("small","",clock(e.inicio)+" – "+clock(e.fin)));n.addEventListener("click",()=>showEvent(e));n.title=e.titulo;return n;}
 function dayJump(d){selected=d;view="day";savePref();navigate();}
 function filters(data){const cals=data?.calendarios||mainData?.calendarios||extraData?.calendarios||[];$("filters").replaceChildren();$("settingsFilters").replaceChildren();for(const c of cals){const b=el("button","chip"+(pref.hidden.includes(c.id)?" off":""));const dot=el("span","swatch");dot.style.background=calendarColor(c);b.append(dot,document.createTextNode(c.nombre));b.setAttribute("aria-pressed",String(!pref.hidden.includes(c.id)));const toggle=()=>{pref.hidden=pref.hidden.includes(c.id)?pref.hidden.filter(x=>x!==c.id):[...pref.hidden,c.id];savePref();render();};b.onclick=toggle;$("filters").append(b);const l=el("label","check"),i=el("input");i.type="checkbox";i.checked=!pref.hidden.includes(c.id);i.onchange=toggle;l.append(i,document.createTextNode(c.nombre));$("settingsFilters").append(l);}}
 function minutes(t){const p=parts(new Date(t));return +p.hour*60 + +p.minute;}
-function renderWeek(r,events,container){const days=[];for(let d=r.from;d<r.to;d=add(d,1))days.push(d);const sc=el("div","scroll"),w=el("div","week"+(days.length===1?" one":""));const grid="var(--time-col,44px) repeat("+days.length+",minmax(0,1fr))";const head=el("div","weekhead");head.style.gridTemplateColumns=grid;head.append(el("div"));for(const d of days){const h=el("button","dayhead"+(d===civil()?" today":""));h.append(el("small","",fmt(d,{weekday:"short"})),el("strong","",String(+d.slice(-2))));h.onclick=()=>dayJump(d);head.append(h);}w.append(head);const ar=el("div","allrow");ar.style.gridTemplateColumns=grid;ar.append(el("div","label","Todo el día"));for(const d of days){const cell=el("div");for(const e of events.filter(e=>e.diaCompleto&&overlaps(e,d)))cell.append(eventButton(e));ar.append(cell);}w.append(ar);const timed=el("div","timed");timed.style.gridTemplateColumns=grid;const hours=el("div","hours");for(let h=0;h<24;h++)hours.append(el("div","hour",String(h).padStart(2,"0")+":00"));timed.append(hours);for(const d of days){const col=el("div","daycol");const items=events.filter(e=>!e.diaCompleto&&overlaps(e,d)).map(e=>({e,start:civil(new Date(e.inicio))<d?0:minutes(e.inicio),end:civil(new Date(e.fin))>d?1440:minutes(e.fin)})).map(x=>({...x,end:Math.min(1440,Math.max(x.start+15,x.end))})).sort((a,b)=>a.start-b.start||b.end-a.end);let cluster=[],end=-1;function flush(){if(!cluster.length)return;const lanes=[];for(const x of cluster){let lane=lanes.findIndex(y=>y<=x.start);if(lane<0)lane=lanes.length;lanes[lane]=x.end;x.lane=lane;}for(const x of cluster){const b=eventButton(x.e,true);b.style.top=(x.start/1440*100)+"%";b.style.height=((x.end-x.start)/1440*100)+"%";b.style.left=(x.lane/lanes.length*100)+"%";b.style.width="calc("+100/lanes.length+"% - 2px)";col.append(b);}cluster=[];end=-1;}for(const x of items){if(x.start>=end)flush();cluster.push(x);end=Math.max(end,x.end);}flush();timed.append(col);}if(containsToday(r)){const line=el("div","nowline");line.append(el("span","nowlabel"));timed.append(line);updateNowLine(timed);}w.append(timed);sc.append(w);container.append(sc);ar.style.top=head.offsetHeight+"px";bindVerticalZoom(sc,timed);return sc;}
-function renderMonth(r,events,container){const m=el("div","month");for(const d of ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"])m.append(el("div","monthlabel",d));for(let d=r.from;d<r.to;d=add(d,1)){const date=d,cell=el("div","cell"+(d.slice(0,7)!==selected.slice(0,7)?" dim":"")+(d===civil()?" today":""));const n=el("button","num",String(+d.slice(-2)));n.onclick=()=>dayJump(date);cell.append(n);const items=events.filter(e=>overlaps(e,date));for(const e of items.slice(0,3))cell.append(eventButton(e));if(items.length>3){const more=el("button","more","+"+(items.length-3)+" más");more.onclick=()=>dayJump(date);cell.append(more);}m.append(cell);}container.append(m);}
+function renderWeek(r,events,container){const days=[];for(let d=r.from;d<r.to;d=add(d,1))days.push(d);const sc=el("div","scroll"),w=el("div","week"+(days.length===1?" one":days.length===3?" three":""));const grid="var(--time-col,44px) repeat("+days.length+",minmax(0,1fr))";const head=el("div","weekhead");head.style.gridTemplateColumns=grid;head.append(el("div"));for(const d of days){const h=el("button","dayhead"+(d===civil()?" today":""));h.append(el("small","",fmt(d,{weekday:"short"})),el("strong","",String(+d.slice(-2))));h.onclick=()=>dayJump(d);head.append(h);}w.append(head);const ar=el("div","allrow allSpan");ar.style.gridTemplateColumns=grid;fillAllDayGrid(ar,days,events,1);w.append(ar);const timed=el("div","timed");timed.style.gridTemplateColumns=grid;const hours=el("div","hours");for(let h=0;h<24;h++)hours.append(el("div","hour",String(h).padStart(2,"0")+":00"));timed.append(hours);for(const d of days){const col=el("div","daycol");const items=events.filter(e=>!e.diaCompleto&&overlaps(e,d)).map(e=>({e,start:civil(new Date(e.inicio))<d?0:minutes(e.inicio),end:civil(new Date(e.fin))>d?1440:minutes(e.fin)})).map(x=>({...x,end:Math.min(1440,Math.max(x.start+15,x.end))})).sort((a,b)=>a.start-b.start||b.end-a.end);let cluster=[],end=-1;function flush(){if(!cluster.length)return;const lanes=[];for(const x of cluster){let lane=lanes.findIndex(y=>y<=x.start);if(lane<0)lane=lanes.length;lanes[lane]=x.end;x.lane=lane;}for(const x of cluster){const b=eventButton(x.e,true);if(lanes.length>1)b.classList.add("overlapEvent");b.style.top=(x.start/1440*100)+"%";b.style.height=((x.end-x.start)/1440*100)+"%";b.style.left=(x.lane/lanes.length*100)+"%";b.style.width="calc("+100/lanes.length+"% - 2px)";col.append(b);}cluster=[];end=-1;}for(const x of items){if(x.start>=end)flush();cluster.push(x);end=Math.max(end,x.end);}flush();timed.append(col);}if(containsToday(r)){const line=el("div","nowline");line.append(el("span","nowlabel"));timed.append(line);updateNowLine(timed);}w.append(timed);sc.append(w);container.append(sc);ar.style.top=head.offsetHeight+"px";bindVerticalZoom(sc,timed);return sc;}
+
+function spanLayout(days,events){
+ const first=days[0],end=add(days[days.length-1],1);
+ const spans=events.filter(e=>e.diaCompleto&&e.inicio<end&&e.fin>first)
+ .map(e=>({e,start:Math.max(0,Math.round((utc(e.inicio)-utc(first))/86400000)),end:Math.min(days.length,Math.round((utc(e.fin)-utc(first))/86400000))}))
+ .filter(x=>x.end>x.start).sort((a,b)=>a.start-b.start||b.end-a.end||a.e.titulo.localeCompare(b.e.titulo));
+ const lanes=[];
+ for(const x of spans){let lane=lanes.findIndex(y=>y<=x.start);if(lane<0)lane=lanes.length;lanes[lane]=x.end;x.lane=lane;}
+ return {spans,count:lanes.length};
+}
+function spanButton(x,days){
+ const b=eventButton(x.e);b.classList.add("spanEvent");
+ if(x.e.inicio<days[0])b.classList.add("continuesLeft");
+ if(x.e.fin>add(days[days.length-1],1))b.classList.add("continuesRight");
+ return b;
+}
+function fillAllDayGrid(ar,days,events,offset){
+ const {spans,count}=spanLayout(days,events);
+ const rows=Math.max(1,count);ar.style.gridTemplateRows="repeat("+rows+",minmax(19px,auto))";
+ const label=el("div","label","Todo el día");label.style.gridColumn="1";label.style.gridRow="1 / "+(rows+1);ar.append(label);
+ for(let i=0;i<days.length;i++){const bg=el("div","allDayBackground");bg.style.gridColumn=String(i+1+offset);bg.style.gridRow="1 / "+(rows+1);ar.append(bg);}
+ for(const x of spans){const b=spanButton(x,days);b.style.gridColumn=(x.start+1+offset)+" / "+(x.end+1+offset);b.style.gridRow=String(x.lane+1);ar.append(b);}
+}
+function renderMonth(r,events,container){
+ const m=el("div","month");for(const d of ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"])m.append(el("div","monthlabel",d));
+ for(let start=r.from;start<r.to;start=add(start,7)){
+  const days=Array.from({length:7},(_,i)=>add(start,i)),week=el("div","monthWeek");
+  const {spans,count}=spanLayout(days,events),shown=Math.min(count,3),lastRow=shown+2;
+  week.style.gridTemplateRows="25px "+(shown?"repeat("+shown+",18px) ":"")+"minmax(42px,auto)";
+  days.forEach((date,i)=>{
+   const dim=date.slice(0,7)!==selected.slice(0,7),today=date===civil(),bg=el("div","monthBg"+(dim?" dim":""));
+   bg.style.gridColumn=String(i+1);bg.style.gridRow="1 / "+(lastRow+1);week.append(bg);
+   const n=el("button","monthNum"+(today?" today":"")+(dim?" dim":""),String(+date.slice(-2)));n.style.gridColumn=String(i+1);n.style.gridRow="1";n.onclick=()=>dayJump(date);week.append(n);
+   const cell=el("div","monthEvents"+(dim?" dim":""));cell.style.gridColumn=String(i+1);cell.style.gridRow=String(lastRow);
+   const items=events.filter(e=>!e.diaCompleto&&overlaps(e,date));for(const e of items.slice(0,3))cell.append(eventButton(e));
+   const extra=Math.max(0,items.length-3)+spans.filter(x=>x.lane>=shown&&x.start<=i&&i<x.end).length;
+   if(extra){const more=el("button","more","+"+extra+" más");more.onclick=()=>dayJump(date);cell.append(more);}
+   week.append(cell);
+  });
+  for(const x of spans.filter(x=>x.lane<shown)){const b=spanButton(x,days);b.style.gridColumn=(x.start+1)+" / "+(x.end+1);b.style.gridRow=String(x.lane+2);week.append(b);}
+  m.append(week);
+ }
+ container.append(m);
+}
 function renderAgenda(r,events,container){const a=el("div","agenda");let count=0;for(let d=r.from;d<r.to;d=add(d,1)){const items=events.filter(e=>overlaps(e,d));if(!items.length)continue;a.append(el("h3","",fmt(d,{dateStyle:"full"})));for(const e of items){count++;const b=el("button","agendaitem"),s=el("span","swatch"),info=el("div");bindEventAppearance(b,e,s);info.append(el("strong","",e.titulo),el("small","",e.diaCompleto?"Todo el día":clock(e.inicio)+" – "+clock(e.fin)));b.append(s,info);b.onclick=()=>showEvent(e);a.append(b);}}if(!count)a.append(el("div","empty","No hay eventos en este periodo."));container.append(a);}
 
 function updateScaleControl(){
@@ -386,12 +471,16 @@ function centerCurrentHour(sc){
  sc.scrollLeft=0;
 }
 setInterval(()=>{if(session&&!document.hidden){updateNowLine();updatePastEvents();}},15000);
-function render(){if(!session)return;if(pinchActive){renderAfterPinch=true;return;}const r=visibleRange(),data=dataFor(r),container=$("calendar"),old=container.querySelector(".scroll"),key=view+r.from+r.to,oldTop=old?.scrollTop,oldLeft=old?.scrollLeft;$("period").textContent=view==="month"?fmt(selected,{month:"long",year:"numeric"}):view==="day"?fmt(selected,{weekday:"short",day:"numeric",month:"long"}):fmt(r.from,{day:"numeric",month:"short"})+" – "+fmt(add(r.to,-1),{day:"numeric",month:"short",year:"numeric"});$("views").value=view;$("app").classList.toggle("timedView",view==="day"||view==="week");filters(data);container.replaceChildren();if(!data){container.append(el("div","loading",navigator.onLine?"Consultando calendario…":"Fechas no guardadas. Conéctate para consultarlas."));return;}const events=visibleEvents(data);if(view==="month")renderMonth(r,events,container);else if(view==="agenda")renderAgenda(r,events,container);else{const s=renderWeek(r,events,container);if(containsToday(r)&&(focusNowOnRender||key!==lastRangeKey||!old)){centerCurrentHour(s);}else if(key===lastRangeKey&&old){s.scrollTop=oldTop;s.scrollLeft=0;}else{s.scrollTop=7*hourHeight;s.scrollLeft=0;}focusNowOnRender=false;}lastRangeKey=key;}
+function render(){if(!session)return;if(pinchActive){renderAfterPinch=true;return;}const r=visibleRange(),data=dataFor(r),container=$("calendar"),old=container.querySelector(".scroll"),key=view+r.from+r.to,oldTop=old?.scrollTop,oldLeft=old?.scrollLeft;$("period").textContent=view==="month"?fmt(selected,{month:"long",year:"numeric"}):view==="day"?fmt(selected,{weekday:"short",day:"numeric",month:"long"}):fmt(r.from,{day:"numeric",month:"short"})+" – "+fmt(add(r.to,-1),{day:"numeric",month:"short",year:"numeric"});$("views").value=view;$("app").classList.toggle("timedView",isTimedView());filters(data);container.replaceChildren();if(!data){container.append(el("div","loading",navigator.onLine?"Consultando calendario…":"Fechas no guardadas. Conéctate para consultarlas."));return;}const events=visibleEvents(data);if(view==="month")renderMonth(r,events,container);else if(view==="agenda")renderAgenda(r,events,container);else{const s=renderWeek(r,events,container);if(containsToday(r)&&(focusNowOnRender||key!==lastRangeKey||!old)){centerCurrentHour(s);}else if(key===lastRangeKey&&old){s.scrollTop=oldTop;s.scrollLeft=0;}else{s.scrollTop=7*hourHeight;s.scrollLeft=0;}focusNowOnRender=false;}lastRangeKey=key;}
+function isTimedView(){return view==="day"||view==="three"||view==="week";}
 function navigate(){render();const d=dataFor(visibleRange());status(d?"Datos guardados · "+stamp(d):"Consultando fechas…",true);sync();}
-$("prev").onclick=()=>{selected=view==="month"?shiftMonth(selected,-1):add(selected,view==="day"?-1:view==="week"?-7:-30);navigate();};$("next").onclick=()=>{selected=view==="month"?shiftMonth(selected,1):add(selected,view==="day"?1:view==="week"?7:30);navigate();};$("today").onclick=()=>{selected=civil();focusNowOnRender=true;navigate();};$("views").onchange=e=>{if(["day","week","month","agenda"].includes(e.target.value)){view=e.target.value;savePref();navigate();}};$("search").oninput=render;$("searchToggle").onclick=()=>{const bar=$("search").closest(".toolbar"),open=bar.classList.toggle("searchOpen");$("searchToggle").setAttribute("aria-expanded",String(open));if(open)$("search").focus();else{$("search").value="";render();}};$("refresh").onclick=()=>{status("Actualizando…",true);sync(true);};$("settings").onclick=()=>{$("cacheInfo").textContent=mainData?("Ventana de 30 días anteriores y 90 posteriores · "+Math.round(new TextEncoder().encode(JSON.stringify(mainData)).length/1024)+" KB de datos"):"Sin caché disponible";updateScaleControl();renderColorSettings();renderUpdateStatus();$("prefs").showModal();};$("theme").onchange=e=>{pref.theme=e.target.value;savePref();theme();};$("clear").onclick=async()=>{mainData=null;extraData=null;try{await clearCache();}catch{}$("cacheInfo").textContent="Caché borrada. Se descargará nuevamente al actualizar.";render();};$("logout").onclick=signOut;for(const d of document.querySelectorAll("dialog"))d.querySelector(".close").onclick=()=>d.close();
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session){updatePastEvents();if((view==="day"||view==="week")&&containsToday(visibleRange())&&!pinchActive){const sc=$("calendar").querySelector(".scroll");if(sc&&sc.querySelector(".nowline")){updateNowLine(sc);centerCurrentHour(sc);}else focusNowOnRender=true;}sync(true);}});addEventListener("online",()=>sync(true));addEventListener("offline",()=>{if(session)status("Sin conexión · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);});setInterval(()=>{if(session&&!document.hidden)sync(true);},30000);
+function movePeriod(direction){const step=view==="day"?1:view==="three"?3:view==="week"?7:30;selected=view==="month"?shiftMonth(selected,direction):add(selected,step*direction);navigate();}
+$("prev").onclick=()=>movePeriod(-1);$("next").onclick=()=>movePeriod(1);
+$("period").onclick=()=>{$("jumpDate").value=selected;$("dateDialog").showModal();};
+$("jumpGo").onclick=()=>{const d=$("jumpDate").value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Number.isFinite(utc(d).getTime()))return;selected=d;focusNowOnRender=true;$("dateDialog").close();navigate();};$("today").onclick=()=>{selected=civil();focusNowOnRender=true;navigate();};$("views").onchange=e=>{if(["day","three","week","month","agenda"].includes(e.target.value)){view=e.target.value;savePref();navigate();}};$("search").oninput=render;$("searchToggle").onclick=()=>{const bar=$("search").closest(".toolbar"),open=bar.classList.toggle("searchOpen");$("searchToggle").setAttribute("aria-expanded",String(open));if(open)$("search").focus();else{$("search").value="";render();}};$("refresh").onclick=()=>{status("Actualizando…",true);sync(true);};$("settings").onclick=()=>{$("cacheInfo").textContent=mainData?("Ventana de 30 días anteriores y 90 posteriores · "+Math.round(new TextEncoder().encode(JSON.stringify(mainData)).length/1024)+" KB de datos"):"Sin caché disponible";updateScaleControl();renderColorSettings();renderUpdateStatus();showPrefsPage(null);$("prefs").showModal();};$("theme").onchange=e=>{pref.theme=e.target.value;savePref();theme();};$("clear").onclick=async()=>{mainData=null;extraData=null;try{await clearCache();}catch{}$("cacheInfo").textContent="Caché borrada. Se descargará nuevamente al actualizar.";render();};$("logout").onclick=signOut;for(const d of document.querySelectorAll("dialog"))d.querySelector(".close").onclick=()=>d.close();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session){updatePastEvents();if((isTimedView())&&containsToday(visibleRange())&&!pinchActive){const sc=$("calendar").querySelector(".scroll");if(sc&&sc.querySelector(".nowline")){updateNowLine(sc);centerCurrentHour(sc);}else focusNowOnRender=true;}sync(true);}});addEventListener("online",()=>sync(true));addEventListener("offline",()=>{if(session)status("Sin conexión · "+(stamp(dataFor(visibleRange()))||"sin datos guardados"),true);});setInterval(()=>{if(session&&!document.hidden)sync(true);},30000);
 
-const APP_VERSION="1.0.10";
+const APP_VERSION="1.1.0";
 let availableVersion=null, dismissedVersion=null, updateChecking=false, lastUpdateCheck=0, updateMessage="";
 function isNewerVersion(candidate,current){
  const a=candidate.split(".").map(Number),b=current.split(".").map(Number);
@@ -438,6 +527,65 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkForUp
 addEventListener("online",()=>checkForUpdate());
 setInterval(()=>{if(!document.hidden)checkForUpdate();},300000);
 renderUpdateStatus();checkForUpdate();
+
+
+function setupPrefsMenu(){
+ const dialog=$("prefs"),menu=$("prefsMenu"),sections=Array.from(dialog.querySelectorAll(".setting"));
+ const groups=[
+ {key:"appearance",title:"Apariencia",icon:"◐",desc:"Tema y colores",items:[0,1]},
+ {key:"calendars",title:"Calendarios",icon:"▦",desc:"Calendarios visibles",items:[3]},
+ {key:"display",title:"Visualización",icon:"↕",desc:"Altura de las horas",items:[2]},
+ {key:"sync",title:"Sincronización",icon:"↻",desc:"Estado y actualización",items:[]},
+ {key:"storage",title:"Almacenamiento",icon:"▣",desc:"Caché y datos locales",items:[4]},
+ {key:"security",title:"Seguridad",icon:"⌑",desc:"Sesión y acceso",items:[6]},
+ {key:"about",title:"Acerca de Tempo",icon:"ⓘ",desc:"Versión y actualizaciones",items:[5]}
+ ];
+ for(const g of groups){
+  const b=el("button","prefsLink"),symbol=el("span","prefsSymbol",g.icon),copy=el("span","prefsCopy"),arrow=el("span","prefsArrow","›");
+  copy.append(el("strong","",g.title),el("small","",g.desc));b.append(symbol,copy,arrow);b.onclick=()=>showPrefsPage(g.key);menu.append(b);
+  const page=el("section","prefsPage");page.dataset.key=g.key;page.dataset.title=g.title;page.hidden=true;
+  for(const i of g.items)page.append(sections[i]);
+  if(g.key==="sync"){const p=el("p","","Actualización automática cada 30 segundos mientras Tempo está abierto.");const state=el("p");state.id="syncSettingsStatus";const refresh=el("button","icon","Actualizar calendario");refresh.onclick=()=>{status("Actualizando…",true);sync(true);};page.append(p,state,refresh);}
+  dialog.append(page);
+ }
+ $("prefsBack").onclick=()=>showPrefsPage(null);
+}
+function showPrefsPage(key){
+ $("prefsMenu").hidden=!!key;$("prefsBack").hidden=!key;
+ for(const p of $("prefs").querySelectorAll(".prefsPage")){p.hidden=p.dataset.key!==key;if(!p.hidden)$("prefsTitle").textContent=p.dataset.title;}
+ if(!key)$("prefsTitle").textContent="Ajustes";
+ if($("syncSettingsStatus"))$("syncSettingsStatus").textContent=statusText||"Sin información";
+ $("prefs").scrollTop=0;
+}
+function bindSwipeNavigation(){
+ const target=$("calendar");let start=null,blocked=false,suppress=0;
+ target.addEventListener("touchstart",e=>{
+  if(e.touches.length!==1){start=null;blocked=true;return;}
+  if(blocked)return;
+  const t=e.touches[0];start={x:t.clientX,y:t.clientY,at:Date.now(),horizontal:false};
+ },{passive:true});
+ target.addEventListener("touchmove",e=>{
+  if(e.touches.length!==1||pinchActive){start=null;blocked=true;return;}
+  if(!start||blocked)return;
+  const t=e.touches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
+  if(!start.horizontal&&Math.abs(dy)>18&&Math.abs(dy)>Math.abs(dx)){start=null;return;}
+  if(Math.abs(dx)>18&&Math.abs(dx)>Math.abs(dy)*1.5)start.horizontal=true;
+  if(start.horizontal&&e.cancelable)e.preventDefault();
+ },{passive:false});
+ target.addEventListener("touchend",e=>{
+  if(e.touches.length)return;
+  if(start&&!blocked&&!pinchActive&&start.horizontal){
+   const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
+   if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.45&&Date.now()-start.at<1600){
+    suppress=Date.now()+450;if(e.cancelable)e.preventDefault();movePeriod(dx<0?1:-1);
+   }
+  }
+  start=null;blocked=false;
+ },{passive:false});
+ target.addEventListener("touchcancel",()=>{start=null;blocked=false;},{passive:true});
+ target.addEventListener("click",e=>{if(Date.now()<suppress){e.preventDefault();e.stopImmediatePropagation();}},true);
+}
+setupPrefsMenu();bindSwipeNavigation();
 
 const remembered=load(KEY,null);if(remembered&&/^[a-f0-9]{64}$/.test(remembered.token||"")&&remembered.expiracion>Date.now())enter(remembered,true,true);else{remove(KEY);clearCache().catch(()=>{});}
 </script></body></html>
